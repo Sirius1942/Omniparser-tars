@@ -1,0 +1,85 @@
+{
+  "summary": {
+    "total_tests": 5,
+    "successful_tests": 5,
+    "success_rate": 100.0,
+    "average_score": 10.0
+  },
+  "detailed_results": [
+    {
+      "task_id": 1,
+      "task_name": "在Google搜索框中搜索'Python编程'",
+      "success": true,
+      "score": 10,
+      "details": {
+        "selected_element": {
+          "id": 10,
+          "content": "Google Search ",
+          "interactable": true,
+          "type": "icon"
+        },
+        "match_reason": "关键词匹配"
+      }
+    },
+    {
+      "task_id": 2,
+      "task_name": "点击'I'm Feeling Lucky'按钮",
+      "success": true,
+      "score": 10,
+      "details": {
+        "selected_element": {
+          "id": 11,
+          "content": "I'm Feeling Luckye ",
+          "interactable": true,
+          "type": "icon"
+        },
+        "match_reason": "关键词匹配"
+      }
+    },
+    {
+      "task_id": 3,
+      "task_name": "登录Google账户",
+      "success": true,
+      "score": 10,
+      "details": {
+        "selected_element": {
+          "id": 9,
+          "content": "Sign in ",
+          "interactable": true,
+          "type": "icon"
+        },
+        "match_reason": "关键词匹配"
+      }
+    },
+    {
+      "task_id": 4,
+      "task_name": "打开Gmail邮箱",
+      "success": true,
+      "score": 10,
+      "details": {
+        "selected_element": {
+          "id": 49,
+          "content": "打开Gmail邮箱",
+          "interactable": true,
+          "type": "icon"
+        },
+        "match_reason": "关键词匹配"
+      }
+    },
+    {
+      "task_id": 5,
+      "task_name": "使用语音搜索功能",
+      "success": true,
+      "score": 10,
+      "details": {
+        "selected_element": {
+          "id": 35,
+          "content": "语音搜索",
+          "interactable": true,
+          "type": "icon"
+        },
+        "match_reason": "关键词匹配"
+      }
+    }
+  ]
+}

@@ -51,7 +51,7 @@ def get_caption_model_processor(model_name, model_name_or_path="Salesforce/blip2
     if model_name == "blip2":
         from transformers import Blip2Processor, Blip2ForConditionalGeneration
         processor = Blip2Processor.from_pretrained(model_name_or_path)
-            model = Blip2ForConditionalGeneration.from_pretrained(
+        model = Blip2ForConditionalGeneration.from_pretrained(
             model_name_or_path, torch_dtype=torch.float16, device_map="auto"
         ).to(device)
     elif model_name == "florence2":
@@ -71,6 +71,11 @@ def get_caption_model_processor(model_name, model_name_or_path="Salesforce/blip2
                 trust_remote_code=True,
                 attn_implementation="eager"
             ).to(device)
+    elif model_name == "gpt4o":
+        # 对于GPT-4o，我们不需要加载本地模型，只需要返回一个标识
+        return {'model': 'gpt-4o', 'processor': 'openai_api'}
+    elif model_name == "gpt4o-mini":
+        return {'model': 'gpt-4o-mini', 'processor': 'openai_api'}
     return {'model': model.to(device), 'processor': processor}
 
 
@@ -452,7 +457,10 @@ def get_som_labeled_img(image_source: Union[str, Image.Image], model=None, BOX_T
     time1 = time.time()
     if use_local_semantics:
         caption_model = caption_model_processor['model']
-        if 'phi3_v' in caption_model.config.model_type: 
+        # 检查是否使用GPT-4o API
+        if caption_model in ['gpt-4o', 'gpt-4o-mini']:
+            parsed_content_icon = get_parsed_content_icon_gpt4o(filtered_boxes, starting_idx, image_source, caption_model_processor, prompt=prompt, batch_size=batch_size)
+        elif hasattr(caption_model, 'config') and 'phi3_v' in caption_model.config.model_type: 
             parsed_content_icon = get_parsed_content_icon_phi3v(filtered_boxes, ocr_bbox, image_source, caption_model_processor)
         else:
             parsed_content_icon = get_parsed_content_icon(filtered_boxes, starting_idx, image_source, caption_model_processor, prompt=prompt,batch_size=batch_size)
@@ -544,3 +552,134 @@ def check_ocr_box(image_source: Union[str, Image.Image], display_img = True, out
         elif output_bb_format == 'xyxy':
             bb = [get_xyxy(item) for item in coord]
     return (text, bb), goal_filtering
+
+def get_parsed_content_icon_gpt4o(filtered_boxes, starting_idx, image_source, caption_model_processor, prompt=None, batch_size=None, config_path="config.json"):
+    """
+    使用GPT-4o等OpenAI多模态模型进行图标描述
+    
+    Args:
+        filtered_boxes: 检测到的图标边界框
+        starting_idx: 开始索引（跳过OCR框）
+        image_source: 原始图像数组
+        caption_model_processor: 模型处理器信息
+        prompt: 自定义提示词
+        batch_size: 批处理大小（如果为None则从配置文件读取）
+        config_path: 配置文件路径
+    
+    Returns:
+        generated_texts: 图标描述文本列表
+    """
+    from openai import OpenAI
+    from util.config import get_config
+    to_pil = ToPILImage()
+    
+    # 从配置文件获取配置
+    try:
+        config = get_config(config_path)
+        api_key = config.get_openai_api_key()
+        base_url = config.get_openai_base_url()
+        if batch_size is None:
+            batch_size = config.get_batch_size()
+        max_tokens = config.get_max_tokens()
+        temperature = config.get_temperature()
+        request_delay = config.get_request_delay()
+        batch_delay = config.get_batch_delay()
+        max_retries = config.get_max_retries()
+        timeout = config.get_request_timeout()
+        
+        # 如果没有提供prompt，使用配置文件中的默认prompt
+        if not prompt:
+            prompt = config.get_default_prompt()
+            
+    except Exception as e:
+        raise ValueError(f"配置文件错误: {e}")
+    
+    # 初始化OpenAI客户端
+    client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
+    
+    if starting_idx:
+        non_ocr_boxes = filtered_boxes[starting_idx:]
+    else:
+        non_ocr_boxes = filtered_boxes
+    
+    # 裁剪图标图像
+    cropped_pil_images = []
+    for i, coord in enumerate(non_ocr_boxes):
+        try:
+            xmin, xmax = int(coord[0]*image_source.shape[1]), int(coord[2]*image_source.shape[1])
+            ymin, ymax = int(coord[1]*image_source.shape[0]), int(coord[3]*image_source.shape[0])
+            cropped_image = image_source[ymin:ymax, xmin:xmax, :]
+            # 对于GPT-4o，我们不需要resize到64x64，保持原始分辨率可能效果更好
+            cropped_pil = to_pil(cropped_image)
+            cropped_pil_images.append(cropped_pil)
+        except Exception as e:
+            print(f"Error cropping image {i}: {e}")
+            continue
+    
+    def image_to_base64(pil_image):
+        """将PIL图像转换为base64编码"""
+        buffer = io.BytesIO()
+        pil_image.save(buffer, format="PNG")
+        return base64.b64encode(buffer.getvalue()).decode()
+    
+    generated_texts = []
+    model_name = caption_model_processor['model']
+    
+    # 批处理调用GPT-4o API，支持重试机制
+    for i in range(0, len(cropped_pil_images), batch_size):
+        batch_images = cropped_pil_images[i:i+batch_size]
+        batch_texts = []
+        
+        for image in batch_images:
+            retry_count = 0
+            success = False
+            
+            while retry_count < max_retries and not success:
+                try:
+                    # 将图像转换为base64
+                    base64_image = image_to_base64(image)
+                    
+                    # 调用GPT-4o API，使用配置文件中的参数
+                    response = client.chat.completions.create(
+                        model=model_name,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": [
+                                    {"type": "text", "text": prompt},
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/png;base64,{base64_image}",
+                                            "detail": "low"  # 使用low detail以节省tokens
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        max_tokens=max_tokens,
+                        temperature=temperature
+                    )
+                    
+                    description = response.choices[0].message.content.strip()
+                    batch_texts.append(description)
+                    success = True
+                    
+                    # 添加延迟以避免API限制
+                    time.sleep(request_delay)
+                    
+                except Exception as e:
+                    retry_count += 1
+                    print(f"API调用失败 (重试 {retry_count}/{max_retries}): {e}")
+                    if retry_count < max_retries:
+                        time.sleep(retry_count * 2)  # 指数退避
+                    else:
+                        batch_texts.append("API调用失败")
+        
+        generated_texts.extend(batch_texts)
+        
+        # 批次间的延迟
+        if i + batch_size < len(cropped_pil_images):
+            time.sleep(batch_delay)
+    
+    return generated_texts

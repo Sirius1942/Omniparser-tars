@@ -1,0 +1,19 @@
+{
+    "openai": {
+        "api_key": "your-openai-api-key-here",
+        "base_url": "https://api.openai.com/v1",
+        "model": "gpt-4o",
+        "max_tokens": 50,
+        "temperature": 0.1,
+        "batch_size": 3,
+        "request_timeout": 30,
+        "max_retries": 3
+    },
+    "caption": {
+        "default_prompt": "请简洁地描述这个图标的功能和用途。用一句话说明这个图标代表什么操作或应用。\n要求：\n1. 使用中文回答\n2. 描述要准确简洁\n3. 重点说明图标的功能而不是外观\n4. 如果无法识别，请说\"未知图标\"\n\n例如：\n- 文件夹图标 -> \"打开文件夹\"\n- 设置齿轮 -> \"系统设置\"\n- 播放按钮 -> \"播放媒体\""
+    },
+    "delays": {
+        "between_requests": 0.1,
+        "between_batches": 0.5
+    }
+} 
