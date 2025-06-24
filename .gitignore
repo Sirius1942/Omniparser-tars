@@ -11,3 +11,11 @@ index.html?linkid=2289031
 wget-log
 weights/icon_caption_florence_v2/
 omnitool/gradio/uploads/
+
+# 配置文件
+config.json
+*.log
+.env
+
+# 嵌入式Git仓库
+temp_mcp_pyautogui/
