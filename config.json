@@ -3,7 +3,7 @@
         "api_key": "sk-SvVkWX26RdugqcYlA1Bc1f8452D9465cA7Af7754Ad173628",
         "base_url": "http://116.63.86.12:3000/v1/",
         "model": "gpt-4o",
-        "max_tokens": 50,
+        "max_tokens": 2000,
         "temperature": 0.1,
         "batch_size": 3,
         "request_timeout": 30,
@@ -15,5 +15,12 @@
     "delays": {
         "between_requests": 0.1,
         "between_batches": 0.5
+    },
+    "client": {
+        "mcp_server_url": "http://127.0.0.1:8568/sse",
+        "screenshot_dir": "screenshots"
+    },
+    "adb": {
+        "device_id": "127.0.0.1:5555"
     }
 } 

@@ -20,7 +20,7 @@ def example_basic_usage():
     print("🚀 图像元素分析器基本使用示例")
     print("=" * 50)
     
-    image_path = "screenshots/screenshot_20250625_074204.png"
+    image_path = "screenshots/screenshot_20250626_103640.png"
     
     if not os.path.exists(image_path):
         print(f"❌ 测试图像不存在: {image_path}")
@@ -45,7 +45,7 @@ def example_basic_usage():
             print(f"   💾 标注图像: {result['annotated_image_path']}")
         
         # 显示前3个图标描述
-        icons = result["icon_elements"][:3]
+        icons = result["icon_elements"]
         if icons:
             print(f"\n🎯 图标描述示例:")
             for i, icon in enumerate(icons, 1):
@@ -56,6 +56,18 @@ def example_basic_usage():
                     print(f"      坐标: [{bbox[0]:.3f}, {bbox[1]:.3f}, {bbox[2]:.3f}, {bbox[3]:.3f}]")
     else:
         print(f"❌ 分析失败: {result.get('error')}")
+
+        text_elements = result["text_elements"]
+        if text_elements:
+            print(f"\n🔍 文本元素示例:")
+            for i, text in enumerate(text_elements, 1):
+                content = text.get('content', 'N/A')
+                bbox = text.get('bbox', [])
+                print(f"   {i}. {content}") 
+                if bbox:
+                    print(f"      坐标: [{bbox[0]:.3f}, {bbox[1]:.3f}, {bbox[2]:.3f}, {bbox[3]:.3f}]")
+        else:
+            print("❌ 未找到文本元素")
 
 
 def example_class_usage():
@@ -76,9 +88,7 @@ def example_class_usage():
     
     # 分析多个图像
     test_images = [
-        "imgs/word.png",
-        "imgs/windows_home.png",
-        "imgs/google_page.png"
+        "screenshots/screenshot_20250625_074204.png"
     ]
     
     for image_path in test_images:
@@ -102,49 +112,49 @@ def example_class_usage():
             print(f"⚠️ 跳过不存在的图像: {image_path}")
 
 
-def example_batch_analysis():
-    """批量分析示例"""
-    print("=" * 50)
-    print("📦 批量分析示例")
-    print("=" * 50)
+# def example_batch_analysis():
+#     """批量分析示例"""
+#     print("=" * 50)
+#     print("📦 批量分析示例")
+#     print("=" * 50)
     
-    # 获取所有测试图像
-    test_images = []
-    for img_name in ["word.png", "windows_home.png", "google_page.png"]:
-        img_path = f"imgs/{img_name}"
-        if os.path.exists(img_path):
-            test_images.append(img_path)
+#     # 获取所有测试图像
+#     test_images = []
+#     for img_name in ["word.png", "windows_home.png", "google_page.png"]:
+#         img_path = f"imgs/{img_name}"
+#         if os.path.exists(img_path):
+#             test_images.append(img_path)
     
-    if not test_images:
-        print("❌ 未找到测试图像")
-        return
+#     if not test_images:
+#         print("❌ 未找到测试图像")
+#         return
     
-    # 创建分析器并批量处理
-    analyzer = ImageElementAnalyzer()
+#     # 创建分析器并批量处理
+#     analyzer = ImageElementAnalyzer()
     
-    if not analyzer.initialize():
-        print("❌ 分析器初始化失败")
-        return
+#     if not analyzer.initialize():
+#         print("❌ 分析器初始化失败")
+#         return
     
-    # 批量分析
-    results = analyzer.batch_analyze(
-        test_images,
-        box_threshold=0.05,
-        save_annotated=True,
-        output_dir="result",
-        verbose=False
-    )
+#     # 批量分析
+#     results = analyzer.batch_analyze(
+#         test_images,
+#         box_threshold=0.05,
+#         save_annotated=True,
+#         output_dir="result",
+#         verbose=False
+#     )
     
-    # 统计结果
-    total_success = sum(1 for r in results.values() if r["success"])
-    total_elements = sum(r["element_count"]["total"] for r in results.values() if r["success"])
-    total_time = sum(r["processing_time"]["total"] for r in results.values() if r["success"])
+#     # 统计结果
+#     total_success = sum(1 for r in results.values() if r["success"])
+#     total_elements = sum(r["element_count"]["total"] for r in results.values() if r["success"])
+#     total_time = sum(r["processing_time"]["total"] for r in results.values() if r["success"])
     
-    print(f"\n📊 批量分析结果:")
-    print(f"   ✅ 成功: {total_success}/{len(test_images)}")
-    print(f"   🎯 总元素数: {total_elements}")
-    print(f"   ⏱️  总耗时: {total_time:.2f}s")
-    print(f"   📈 平均每图: {total_time/total_success:.2f}s")
+#     print(f"\n📊 批量分析结果:")
+#     print(f"   ✅ 成功: {total_success}/{len(test_images)}")
+#     print(f"   🎯 总元素数: {total_elements}")
+#     print(f"   ⏱️  总耗时: {total_time:.2f}s")
+#     print(f"   📈 平均每图: {total_time/total_success:.2f}s")
 
 
 def example_utility_functions():
@@ -153,7 +163,7 @@ def example_utility_functions():
     print("🛠️ 工具函数使用示例")
     print("=" * 50)
     
-    image_path = "imgs/word.png"
+    image_path = "screenshots/screenshot_20250625_074204.png"
     
     if not os.path.exists(image_path):
         print(f"❌ 测试图像不存在: {image_path}")
@@ -194,36 +204,36 @@ def example_utility_functions():
                 print(f"   搜索'{search_term}' -> 未找到匹配项")
 
 
-def example_custom_parameters():
-    """自定义参数示例"""
-    print("=" * 50)
-    print("⚙️ 自定义参数示例")
-    print("=" * 50)
+# def example_custom_parameters():
+#     """自定义参数示例"""
+#     print("=" * 50)
+#     print("⚙️ 自定义参数示例")
+#     print("=" * 50)
     
-    image_path = "imgs/google_page.png"
+#     image_path = "imgs/google_page.png"
     
-    if not os.path.exists(image_path):
-        print(f"❌ 测试图像不存在: {image_path}")
-        return
+#     if not os.path.exists(image_path):
+#         print(f"❌ 测试图像不存在: {image_path}")
+#         return
     
-    # 使用不同的检测阈值
-    thresholds = [0.03, 0.05, 0.08]
+#     # 使用不同的检测阈值
+#     thresholds = [0.03, 0.05, 0.08]
     
-    for threshold in thresholds:
-        print(f"\n🎯 使用检测阈值: {threshold}")
+#     for threshold in thresholds:
+#         print(f"\n🎯 使用检测阈值: {threshold}")
         
-        result = analyze_single_image(
-            image_path,
-            box_threshold=threshold,
-            save_annotated=False,
-            verbose=False
-        )
+#         result = analyze_single_image(
+#             image_path,
+#             box_threshold=threshold,
+#             save_annotated=False,
+#             verbose=False
+#         )
         
-        if result["success"]:
-            count = result["element_count"]
-            print(f"   检测到 {count['total']} 个元素 (文本:{count['text']}, 图标:{count['icon']})")
-        else:
-            print(f"   ❌ 分析失败: {result.get('error')}")
+#         if result["success"]:
+#             count = result["element_count"]
+#             print(f"   检测到 {count['total']} 个元素 (文本:{count['text']}, 图标:{count['icon']})")
+#         else:
+#             print(f"   ❌ 分析失败: {result.get('error')}")
 
 
 def main():
@@ -237,17 +247,17 @@ def main():
         # 运行各种示例
         example_basic_usage()
         
-        print("\n" + "="*60)
-        example_class_usage()
+        # print("\n" + "="*60)
+        # example_class_usage()
         
-        print("\n" + "="*60)  
-        example_batch_analysis()
+        # # print("\n" + "="*60)  
+        # # example_batch_analysis()
         
-        print("\n" + "="*60)
-        example_utility_functions()
+        # print("\n" + "="*60)
+        # example_utility_functions()
         
-        print("\n" + "="*60)
-        example_custom_parameters()
+        # print("\n" + "="*60)
+        # example_custom_parameters()
         
     except KeyboardInterrupt:
         print("\n👋 用户中断操作")
