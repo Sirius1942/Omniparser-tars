@@ -5,6 +5,13 @@ FastMCP 图像分析器演示启动脚本
 自动检查服务器状态并运行客户端演示
 """
 
+import os
+import sys
+
+# 添加项目根目录到Python路径
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 import subprocess
 import time
 import requests

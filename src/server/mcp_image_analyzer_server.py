@@ -23,7 +23,7 @@ from mcp.types import (
 )
 
 # 导入图像分析器
-from util.image_element_analyzer import ImageElementAnalyzer
+from src.utils.image_element_analyzer import ImageElementAnalyzer
 
 # 全局分析器实例
 analyzer: Optional[ImageElementAnalyzer] = None

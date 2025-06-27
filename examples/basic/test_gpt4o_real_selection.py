@@ -6,6 +6,13 @@ GPT-4o真实选择测试脚本
 """
 
 import os
+import sys
+
+# 添加项目根目录到Python路径
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+import os
 import json
 import csv
 import re
@@ -23,7 +30,7 @@ class GPT4oRealSelectionTest:
         # 加载配置
         if os.path.exists(config_path):
             try:
-                from util.config import get_config
+                from src.utils.config import get_config
                 self.config = get_config(config_path)
                 print("✅ 配置文件加载成功")
             except Exception as e:

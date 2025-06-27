@@ -16,8 +16,8 @@ import torch
 import pandas as pd
 
 # 导入 OmniParser 相关模块
-from util.utils import get_som_labeled_img, check_ocr_box, get_caption_model_processor, get_yolo_model
-from util.config import get_config
+from src.utils.utils import get_som_labeled_img, check_ocr_box, get_caption_model_processor, get_yolo_model
+from src.utils.config import get_config
 
 
 class ImageElementAnalyzer:

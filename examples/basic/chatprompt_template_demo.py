@@ -5,6 +5,13 @@ ChatPromptTemplate 演示脚本
 展示LangChain中ChatPromptTemplate的各种用法
 """
 
+import os
+import sys
+
+# 添加项目根目录到Python路径
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 import json
 import asyncio
 from typing import Dict, List, Any

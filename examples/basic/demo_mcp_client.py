@@ -5,6 +5,13 @@ FastMCP 图像元素分析器客户端演示
 展示如何调用服务器的各种功能
 """
 
+import os
+import sys
+
+# 添加项目根目录到Python路径
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 import asyncio
 import base64
 import os

@@ -5,6 +5,13 @@ FastMCP 图像分析器客户端演示 - 适配版
 直接使用 FastMCP 的 HTTP API 模式
 """
 
+import os
+import sys
+
+# 添加项目根目录到Python路径
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 import asyncio
 import json
 import os

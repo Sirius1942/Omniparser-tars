@@ -6,6 +6,13 @@
 """
 
 import os
+import sys
+
+# 添加项目根目录到Python路径
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+import os
 import json
 import base64
 import time
@@ -16,7 +23,7 @@ from PIL import Image
 import io
 
 # 导入图像分析器
-from util.image_element_analyzer import ImageElementAnalyzer
+from src.utils.image_element_analyzer import ImageElementAnalyzer
 
 app = Flask(__name__)
 analyzer = None

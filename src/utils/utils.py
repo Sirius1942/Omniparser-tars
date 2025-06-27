@@ -41,7 +41,7 @@ import re
 from torchvision.transforms import ToPILImage
 import supervision as sv
 import torchvision.transforms as T
-from util.box_annotator import BoxAnnotator 
+from src.utils.box_annotator import BoxAnnotator 
 
 
 def get_caption_model_processor(model_name, model_name_or_path="Salesforce/blip2-opt-2.7b", device=None):
@@ -595,7 +595,7 @@ def get_parsed_content_icon_gpt4o(filtered_boxes, starting_idx, image_source, ca
         generated_texts: 图标描述文本列表
     """
     from openai import OpenAI
-    from util.config import get_config
+    from src.utils.config import get_config
     to_pil = ToPILImage()
     
     # 从配置文件获取配置

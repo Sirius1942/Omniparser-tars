@@ -14,8 +14,8 @@ from PIL import Image
 # 添加项目路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from util.image_element_analyzer import ImageElementAnalyzer
-from util.config import get_config
+from src.utils.image_element_analyzer import ImageElementAnalyzer
+from src.utils.config import get_config
 
 
 async def debug_image_analyzer():

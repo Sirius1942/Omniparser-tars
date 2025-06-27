@@ -15,15 +15,15 @@ from PIL import Image
 # 添加项目路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from util.image_element_analyzer import ImageElementAnalyzer
-from util.config import get_config
+from src.utils.image_element_analyzer import ImageElementAnalyzer
+from src.utils.config import get_config
 
-from util.adb_mcp_driver import (
-    test_mcp_connection,
-    get_mcp_tools_list,
-    execute_mcp_tool,
-    load_client_config
-)
+# from src.utils.adb_mcp_driver import (
+#     test_mcp_connection,
+#     get_mcp_tools_list,
+#     execute_mcp_tool,
+#     load_client_config
+# )
 
 
 
