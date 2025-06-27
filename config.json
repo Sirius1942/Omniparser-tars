@@ -2,7 +2,7 @@
     "openai": {
         "api_key": "sk-SvVkWX26RdugqcYlA1Bc1f8452D9465cA7Af7754Ad173628",
         "base_url": "http://116.63.86.12:3000/v1/",
-        "model": "gpt-4o",
+        "model": "Qwen3-32B",
         "max_tokens": 2000,
         "temperature": 0.1,
         "batch_size": 3,

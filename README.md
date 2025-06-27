@@ -1,80 +1,191 @@
-# OmniParser: Screen Parsing tool for Pure Vision Based GUI Agent
+# Omniparser TARS - 智能图像解析工具
 
-<p align="center">
-  <img src="imgs/logo.png" alt="Logo">
-</p>
-<!-- <a href="https://trendshift.io/repositories/12975" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12975" alt="microsoft%2FOmniParser | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a> -->
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-[![arXiv](https://img.shields.io/badge/Paper-green)](https://arxiv.org/abs/2408.00203)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Omniparser TARS 是一个强大的图像解析工具，集成了多种AI技术，包括OCR、目标检测和GPT-4视觉分析，为图像内容提供全面的智能解析能力。
 
-📢 [[Project Page](https://microsoft.github.io/OmniParser/)] [[V2 Blog Post](https://www.microsoft.com/en-us/research/articles/omniparser-v2-turning-any-llm-into-a-computer-use-agent/)] [[Models V2](https://huggingface.co/microsoft/OmniParser-v2.0)] [[Models V1.5](https://huggingface.co/microsoft/OmniParser)] [[HuggingFace Space Demo](https://huggingface.co/spaces/microsoft/OmniParser-v2)]
+## 🚀 主要特性
 
-**OmniParser** is a comprehensive method for parsing user interface screenshots into structured and easy-to-understand elements, which significantly enhances the ability of GPT-4V to generate actions that can be accurately grounded in the corresponding regions of the interface. 
+- **多模态AI解析**：结合OCR、YOLO目标检测和GPT-4视觉分析
+- **多种服务模式**：支持MCP、FastMCP、HTTP API等多种服务方式
+- **灵活的客户端**：提供命令行、HTTP、Gradio等多种客户端接口
+- **丰富的示例**：包含完整的使用示例和演示代码
+- **详细的文档**：提供API文档、使用指南和训练说明
 
-## News
-- [2025/3] We support local logging of trajecotry so that you can use OmniParser+OmniTool to build training data pipeline for your favorate agent in your domain. [Documentation WIP]
-- [2025/3] We are gradually adding multi agents orchstration and improving user interface in OmniTool for better experience.
-- [2025/2] We release OmniParser V2 [checkpoints](https://huggingface.co/microsoft/OmniParser-v2.0). [Watch Video](https://1drv.ms/v/c/650b027c18d5a573/EWXbVESKWo9Buu6OYCwg06wBeoM97C6EOTG6RjvWLEN1Qg?e=alnHGC)
-- [2025/2] We introduce OmniTool: Control a Windows 11 VM with OmniParser + your vision model of choice. OmniTool supports out of the box the following large language models - OpenAI (4o/o1/o3-mini), DeepSeek (R1), Qwen (2.5VL) or Anthropic Computer Use. [Watch Video](https://1drv.ms/v/c/650b027c18d5a573/EehZ7RzY69ZHn-MeQHrnnR4BCj3by-cLLpUVlxMjF4O65Q?e=8LxMgX)
-- [2025/1] V2 is coming. We achieve new state of the art results 39.5% on the new grounding benchmark [Screen Spot Pro](https://github.com/likaixin2000/ScreenSpot-Pro-GUI-Grounding/tree/main) with OmniParser v2 (will be released soon)! Read more details [here](https://github.com/microsoft/OmniParser/tree/master/docs/Evaluation.md).
-- [2024/11] We release an updated version, OmniParser V1.5 which features 1) more fine grained/small icon detection, 2) prediction of whether each screen element is interactable or not. Examples in the demo.ipynb. 
-- [2024/10] OmniParser was the #1 trending model on huggingface model hub (starting 10/29/2024). 
-- [2024/10] Feel free to checkout our demo on [huggingface space](https://huggingface.co/spaces/microsoft/OmniParser)! (stay tuned for OmniParser + Claude Computer Use)
-- [2024/10] Both Interactive Region Detection Model and Icon functional description model are released! [Hugginface models](https://huggingface.co/microsoft/OmniParser)
-- [2024/09] OmniParser achieves the best performance on [Windows Agent Arena](https://microsoft.github.io/WindowsAgentArena/)! 
+## 📁 项目结构
 
-## Install 
-First clone the repo, and then install environment:
-```python
-cd OmniParser
-conda create -n "omni" python==3.12
-conda activate omni
+```
+├── src/                    # 核心源代码
+│   ├── core/              # 核心功能模块
+│   ├── server/            # 服务端实现
+│   ├── client/            # 客户端实现
+│   └── utils/             # 工具类和配置
+├── examples/              # 示例代码
+│   ├── basic/             # 基础示例
+│   ├── mcp/               # MCP协议示例
+│   ├── fastmcp/           # FastMCP服务示例
+│   ├── http/              # HTTP API示例
+│   └── gradio/            # Gradio界面示例
+├── docs/                  # 文档
+│   ├── api/               # API文档
+│   ├── usage/             # 使用指南
+│   └── training/          # 模型训练文档
+├── results/               # 分析结果
+├── weights/               # 模型权重
+├── imgs/                  # 示例图片
+└── screenshots/           # 截图示例
+```
+
+## 🛠️ 安装
+
+### 环境要求
+
+- Python 3.8+
+- CUDA支持（可选，用于GPU加速）
+
+### 安装依赖
+
+```bash
 pip install -r requirements.txt
 ```
 
-Ensure you have the V2 weights downloaded in weights folder (ensure caption weights folder is called icon_caption_florence). If not download them with:
-```
-   # download the model checkpoints to local directory OmniParser/weights/
-   for f in icon_detect/{train_args.yaml,model.pt,model.yaml} icon_caption/{config.json,generation_config.json,model.safetensors}; do huggingface-cli download microsoft/OmniParser-v2.0 "$f" --local-dir weights; done
-   mv weights/icon_caption weights/icon_caption_florence
-```
+### 配置
 
-<!-- ## [deprecated]
-Then download the model ckpts files in: https://huggingface.co/microsoft/OmniParser, and put them under weights/, default folder structure is: weights/icon_detect, weights/icon_caption_florence, weights/icon_caption_blip2. 
-
-For v1: 
-convert the safetensor to .pt file. 
-```python
-python weights/convert_safetensor_to_pt.py
-
-For v1.5: 
-download 'model_v1_5.pt' from https://huggingface.co/microsoft/OmniParser/tree/main/icon_detect_v1_5, make a new dir: weights/icon_detect_v1_5, and put it inside the folder. No weight conversion is needed. 
-``` -->
-
-## Examples:
-We put together a few simple examples in the demo.ipynb. 
-
-## Gradio Demo
-To run gradio demo, simply run:
-```python
-python gradio_demo.py
+1. 复制配置文件模板：
+```bash
+cp config.example.json config.json
 ```
 
-## Model Weights License
-For the model checkpoints on huggingface model hub, please note that icon_detect model is under AGPL license since it is a license inherited from the original yolo model. And icon_caption_blip2 & icon_caption_florence is under MIT license. Please refer to the LICENSE file in the folder of each model: https://huggingface.co/microsoft/OmniParser.
-
-## 📚 Citation
-Our technical report can be found [here](https://arxiv.org/abs/2408.00203).
-If you find our work useful, please consider citing our work:
-```
-@misc{lu2024omniparserpurevisionbased,
-      title={OmniParser for Pure Vision Based GUI Agent}, 
-      author={Yadong Lu and Jianwei Yang and Yelong Shen and Ahmed Awadallah},
-      year={2024},
-      eprint={2408.00203},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2408.00203}, 
+2. 编辑配置文件，填入你的API密钥：
+```json
+{
+  "openai_api_key": "your-openai-api-key",
+  "device": "cuda",  // 或 "cpu"
+  "model_path": "./weights/"
 }
 ```
+
+## 🚀 快速开始
+
+### 1. HTTP API 服务
+
+启动HTTP服务：
+```bash
+python examples/http/standalone_image_analyzer.py
+```
+
+使用客户端：
+```bash
+python examples/http/standalone_client.py
+```
+
+### 2. MCP 服务
+
+启动MCP服务：
+```bash
+python src/server/start_mcp_server.py
+```
+
+使用MCP客户端：
+```bash
+python examples/mcp/mcp_client_example.py
+```
+
+### 3. FastMCP 服务
+
+启动FastMCP服务：
+```bash
+python examples/fastmcp/start_fastmcp_server.py
+```
+
+使用FastMCP客户端：
+```bash
+python examples/fastmcp/fastmcp_client_example.py
+```
+
+## 📖 使用示例
+
+### 基础图像分析
+
+```python
+from src.utils.image_element_analyzer import ImageElementAnalyzer
+
+# 初始化分析器
+analyzer = ImageElementAnalyzer()
+
+# 分析图像
+results = analyzer.analyze_image("path/to/image.png")
+
+# 获取分析结果
+print(results)
+```
+
+### HTTP API 调用
+
+```python
+import requests
+
+# 分析图像文件
+with open("image.png", "rb") as f:
+    response = requests.post(
+        "http://localhost:8080/analyze_file",
+        files={"file": f}
+    )
+    
+results = response.json()
+```
+
+## 🔧 API 文档
+
+### HTTP API 端点
+
+- `GET /health` - 健康检查
+- `POST /analyze_file` - 分析上传的图像文件
+- `POST /analyze_base64` - 分析Base64编码的图像
+- `GET /annotated_image/<filename>` - 获取标注后的图像
+- `GET /results` - 获取分析结果列表
+
+详细的API文档请参考：[docs/api/](docs/api/)
+
+## 📚 文档
+
+- [API文档](docs/api/) - 详细的API接口说明
+- [使用指南](docs/usage/) - 完整的使用教程
+- [模型训练](docs/training/) - 模型训练和评估指南
+
+## 🧪 示例代码
+
+在 `examples/` 目录下提供了丰富的示例：
+
+- **基础示例** (`examples/basic/`) - 基本功能演示
+- **MCP示例** (`examples/mcp/`) - MCP协议使用示例
+- **FastMCP示例** (`examples/fastmcp/`) - FastMCP服务示例
+- **HTTP示例** (`examples/http/`) - HTTP API使用示例
+
+## 🤝 贡献
+
+欢迎提交Issue和Pull Request！
+
+1. Fork 本仓库
+2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交你的修改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开一个Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🔗 链接
+
+- [GitHub仓库](https://github.com/Sirius1942/Omniparser-tars)
+- [GitLab仓库](https://gitlab.casstime.net/a02267/tars-server)
+
+## 🙏 致谢
+
+感谢所有为这个项目做出贡献的开发者！
+
+---
+
+如果你觉得这个项目有用，请给我们一个⭐️！
