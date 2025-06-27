@@ -442,7 +442,11 @@ def get_som_labeled_img(image_source: Union[str, Image.Image], model=None, BOX_T
         print('no ocr bbox!!!')
         ocr_bbox = None
 
-    ocr_bbox_elem = [{'type': 'text', 'bbox':box, 'interactivity':False, 'content':txt, 'source': 'box_ocr_content_ocr'} for box, txt in zip(ocr_bbox, ocr_text) if int_box_area(box, w, h) > 0] 
+    # 处理OCR结果为空的情况
+    if ocr_bbox is None or len(ocr_bbox) == 0 or len(ocr_text) == 0:
+        ocr_bbox_elem = []
+    else:
+        ocr_bbox_elem = [{'type': 'text', 'bbox':box, 'interactivity':False, 'content':txt, 'source': 'box_ocr_content_ocr'} for box, txt in zip(ocr_bbox, ocr_text) if int_box_area(box, w, h) > 0] 
     xyxy_elem = [{'type': 'icon', 'bbox':box, 'interactivity':True, 'content':None} for box in xyxy.tolist() if int_box_area(box, w, h) > 0]
     filtered_boxes = remove_overlap_new(boxes=xyxy_elem, iou_threshold=iou_threshold, ocr_bbox=ocr_bbox_elem)
     
@@ -478,6 +482,15 @@ def get_som_labeled_img(image_source: Union[str, Image.Image], model=None, BOX_T
         ocr_text = [f"Text Box ID {i}: {txt}" for i, txt in enumerate(ocr_text)]
         parsed_content_merged = ocr_text
     print('time to get parsed content:', time.time()-time1)
+
+    # 处理没有检测到任何元素的情况
+    if len(filtered_boxes) == 0:
+        # 创建空的结果
+        pil_img = Image.fromarray(image_source)
+        buffered = io.BytesIO()
+        pil_img.save(buffered, format="PNG")
+        encoded_image = base64.b64encode(buffered.getvalue()).decode('ascii')
+        return encoded_image, {}, []
 
     filtered_boxes = box_convert(boxes=filtered_boxes, in_fmt="xyxy", out_fmt="cxcywh")
 
@@ -529,14 +542,26 @@ def check_ocr_box(image_source: Union[str, Image.Image], display_img = True, out
         else:
             text_threshold = easyocr_args['text_threshold']
         result = paddle_ocr.ocr(image_np, cls=False)[0]
-        coord = [item[0] for item in result if item[1][1] > text_threshold]
-        text = [item[1][0] for item in result if item[1][1] > text_threshold]
+        
+        # 处理PaddleOCR可能返回None的情况
+        if result is None or len(result) == 0:
+            coord = []
+            text = []
+        else:
+            coord = [item[0] for item in result if item[1][1] > text_threshold]
+            text = [item[1][0] for item in result if item[1][1] > text_threshold]
     else:  # EasyOCR
         if easyocr_args is None:
             easyocr_args = {}
         result = reader.readtext(image_np, **easyocr_args)
-        coord = [item[0] for item in result]
-        text = [item[1] for item in result]
+        
+        # 处理EasyOCR可能返回None的情况
+        if result is None or len(result) == 0:
+            coord = []
+            text = []
+        else:
+            coord = [item[0] for item in result]
+            text = [item[1] for item in result]
     if display_img:
         opencv_img = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
         bb = []

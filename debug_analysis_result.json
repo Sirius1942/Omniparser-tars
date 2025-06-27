@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "elements": [],
+  "element_count": {
+    "total": 0,
+    "text": 0,
+    "icon": 0
+  },
+  "processing_time": {
+    "ocr": 0.11038994789123535,
+    "caption": 0.6290009021759033,
+    "total": 0.7580652236938477
+  },
+  "image_info": {
+    "path": "screenshots/screenshot_20250626_151617.png",
+    "size": [
+      756,
+      1638
+    ],
+    "mode": "RGBA",
+    "format": "PNG"
+  }
+}
