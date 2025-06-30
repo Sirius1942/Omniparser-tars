@@ -39,11 +39,11 @@ class PhoenixScoutFastMCPClient:
         self.sse_context = None      # SSE 连接上下文
         self.connected = False
         
-    async def connect(self, timeout: float = 10.0) -> bool:
+    async def connect(self, timeout: float = 1800.0) -> bool:
         """连接到已运行的FastMCP SSE服务器"""
         try:
             print(f"🔗 连接到 Phoenix Vision FastMCP 服务器: {self.sse_url}")
-            
+            print(f"⏰ 连接超时设置: {timeout/60:.1f}分钟")
             # 建立 SSE 连接
             print("🔍 建立 SSE 连接...")
             self.sse_context = sse_client(self.sse_url)
@@ -69,7 +69,7 @@ class PhoenixScoutFastMCPClient:
             return True
             
         except asyncio.TimeoutError:
-            print(f"❌ 连接超时 ({timeout}秒)")
+            print(f"❌ 连接超时 ({timeout/60:.1f}分钟)")
             print("💡 可能的原因: 服务器响应慢或网络问题")
             return False
             
