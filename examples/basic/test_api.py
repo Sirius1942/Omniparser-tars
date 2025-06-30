@@ -19,7 +19,7 @@ from openai import OpenAI
 def load_config():
     """加载配置文件"""
     try:
-        with open('config.json', 'r', encoding='utf-8') as f:
+        with open(os.path.join(project_root, "config.json"), 'r', encoding='utf-8') as f:
             config = json.load(f)
         return config
     except FileNotFoundError:

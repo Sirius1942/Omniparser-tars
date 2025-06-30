@@ -25,7 +25,7 @@ class ChatPromptTemplateDemo:
     
     def __init__(self):
         # 加载配置
-        with open("config.json", 'r', encoding='utf-8') as f:
+        with open(os.path.join(project_root, "config.json"), 'r', encoding='utf-8') as f:
             config = json.load(f)
         
         openai_config = config.get("openai", {})

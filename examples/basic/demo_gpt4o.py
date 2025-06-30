@@ -3,6 +3,41 @@
 """
 GPT-4o 图标识别演示脚本
 基于 demo.ipynb 改写，使用 GPT-4o 替代 Florence-2
+
+功能描述:
+- 使用 YOLO 模型进行图标检测
+- 使用 GPT-4o 进行图标描述和分析
+- 使用 PaddleOCR 进行文本识别
+- 生成标注图像和详细结果数据
+
+使用方法:
+1. 从项目根目录运行:
+   python examples/basic/demo_gpt4o.py
+
+2. 从当前目录运行:
+   cd examples/basic && python demo_gpt4o.py
+
+依赖要求:
+- 已安装所有依赖: pip install -r requirements.txt
+- 配置文件: config.json (包含 OpenAI API 密钥)
+- 模型权重: weights/icon_detect/model.pt
+- 测试图像: imgs/word.png, imgs/windows_home.png, imgs/google_page.png
+
+输出文件:
+- output_gpt4o_*.png: 带标注的图像文件
+- results_gpt4o_*.csv: 详细的检测结果数据
+
+示例命令:
+# 基础运行
+python examples/basic/demo_gpt4o.py
+
+# 查看帮助信息
+python examples/basic/demo_gpt4o.py --help
+
+注意事项:
+- 确保 config.json 中配置了有效的 OpenAI API 密钥
+- 首次运行可能需要下载模型权重
+- CPU 模式下处理速度较慢，建议使用 GPU
 """
 
 import os
@@ -12,8 +47,8 @@ import sys
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-import os
-import sys
+
+import argparse
 import time
 import base64
 import io
@@ -25,34 +60,140 @@ import pandas as pd
 from src.utils.utils import get_som_labeled_img, check_ocr_box, get_caption_model_processor, get_yolo_model
 from src.utils.config import get_config
 
-def main():
+def parse_arguments():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(
+        description="GPT-4o 图标识别演示脚本",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例用法:
+  # 基础运行 (处理默认图像)
+  python examples/basic/demo_gpt4o.py
+  
+  # 处理单个图像
+  python examples/basic/demo_gpt4o.py --image imgs/word.png
+  
+  # 处理多个图像
+  python examples/basic/demo_gpt4o.py --image imgs/word.png imgs/windows_home.png
+  
+  # 启用 GPU 加速
+  python examples/basic/demo_gpt4o.py --device cuda
+  
+  # 调整检测阈值
+  python examples/basic/demo_gpt4o.py --threshold 0.1
+  
+  # 启用详细输出
+  python examples/basic/demo_gpt4o.py --verbose
+
+输出文件:
+  - output_gpt4o_*.png: 带标注的图像文件
+  - results_gpt4o_*.csv: 详细的检测结果数据
+  
+注意事项:
+  - 确保 config.json 中配置了有效的 OpenAI API 密钥
+  - 确保模型权重文件存在: weights/icon_detect/model.pt
+  - CPU 模式下处理速度较慢，建议使用 GPU
+        """
+    )
+    
+    parser.add_argument(
+        '--image', '-i',
+        type=str,
+        nargs='*',
+        help='要处理的图像文件路径 (可指定多个)'
+    )
+    
+    parser.add_argument(
+        '--device', '-d',
+        type=str,
+        choices=['auto', 'cpu', 'cuda'],
+        default='auto',
+        help='指定计算设备 (默认: auto)'
+    )
+    
+    parser.add_argument(
+        '--threshold', '-t',
+        type=float,
+        default=0.05,
+        help='检测阈值 (默认: 0.05)'
+    )
+    
+    parser.add_argument(
+        '--config', '-c',
+        type=str,
+        help='配置文件路径 (默认: config.json)'
+    )
+    
+    parser.add_argument(
+        '--verbose', '-v',
+        action='store_true',
+        help='启用详细输出'
+    )
+    
+    parser.add_argument(
+        '--output-dir', '-o',
+        type=str,
+        default='.',
+        help='输出目录 (默认: 当前目录)'
+    )
+    
+    return parser.parse_args()
+
+def main(args=None):
+    """主函数"""
+    if args is None:
+        args = parse_arguments()
+    
     print("🚀 OmniParser + GPT-4o 演示")
     print("=" * 50)
     
+    if args.verbose:
+        print(f"📋 参数配置:")
+        print(f"   设备: {args.device}")
+        print(f"   阈值: {args.threshold}")
+        print(f"   输出目录: {args.output_dir}")
+        if args.image:
+            print(f"   指定图像: {args.image}")
+    
     # 1. 检查配置文件
-    config_path = "config.json"
+    config_path = args.config if args.config else os.path.join(project_root, "config.json")
     if not os.path.exists(config_path):
         print("❌ 配置文件不存在！请确保 config.json 已正确设置")
+        print(f"   期望路径: {config_path}")
         return
     
     try:
         config = get_config(config_path)
         print("✅ 配置文件加载成功")
-        print(f"   🔧 API端点: {config.get_openai_base_url()}")
-        print(f"   🤖 使用模型: {config.get_openai_model()}")
-        print(f"   📦 批处理大小: {config.get_batch_size()}")
+        if args.verbose:
+            print(f"   🔧 API端点: {config.get_openai_base_url()}")
+            print(f"   🤖 使用模型: {config.get_openai_model()}")
+            print(f"   📦 批处理大小: {config.get_batch_size()}")
     except Exception as e:
         print(f"❌ 配置错误: {e}")
         return
     
     # 2. 设置设备
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    if args.device == 'auto':
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    else:
+        device = args.device
+        if device == 'cuda' and not torch.cuda.is_available():
+            print("⚠️  CUDA 不可用，切换到 CPU")
+            device = 'cpu'
+    
     print(f"🖥️  使用设备: {device}")
     
-    # 3. 加载YOLO模型
-    model_path = 'weights/icon_detect/model.pt'
+    # 3. 检查输出目录
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+        print(f"📁 创建输出目录: {args.output_dir}")
+    
+    # 4. 加载YOLO模型
+    model_path = os.path.join(project_root, 'weights/icon_detect/model.pt')
     if not os.path.exists(model_path):
         print(f"❌ 模型文件不存在: {model_path}")
+        print("   请确保已下载模型权重文件")
         return
     
     print("\n📥 加载YOLO图标检测模型...")
@@ -69,12 +210,18 @@ def main():
     )
     print("✅ GPT-4o模型配置完成")
     
-    # 5. 处理测试图像
-    test_images = [
-        'imgs/word.png',
-        'imgs/windows_home.png',
-        'imgs/google_page.png'
-    ]
+    # 6. 确定要处理的图像
+    if args.image:
+        test_images = args.image
+    else:
+        # 默认图像
+        test_images = [
+            os.path.join(project_root, 'imgs/word.png'),
+            os.path.join(project_root, 'imgs/windows_home.png'),
+            os.path.join(project_root, 'imgs/google_page.png')
+        ]
+    
+    print(f"📸 将处理 {len(test_images)} 个图像")
     
     for image_path in test_images:
         if not os.path.exists(image_path):
@@ -97,7 +244,7 @@ def main():
             'text_padding': max(int(3 * box_overlay_ratio), 1),
             'thickness': max(int(3 * box_overlay_ratio), 1),
         }
-        BOX_TRESHOLD = 0.05
+        BOX_TRESHOLD = args.threshold
         
         # 计时开始
         start_time = time.time()
@@ -145,7 +292,7 @@ def main():
             print(f"   ⏱️  总耗时: {total_time:.2f}s")
             
             # 保存标注图像
-            output_path = f"output_gpt4o_{os.path.basename(image_path)}"
+            output_path = os.path.join(args.output_dir, f"output_gpt4o_{os.path.basename(image_path)}")
             image_data = base64.b64decode(dino_labled_img)
             output_image = Image.open(io.BytesIO(image_data))
             output_image.save(output_path)
@@ -180,7 +327,7 @@ def main():
                     print(f"       位置: ({bbox[0]:.3f}, {bbox[1]:.3f}, {bbox[2]:.3f}, {bbox[3]:.3f})")
             
             # 保存详细结果到CSV
-            csv_path = f"results_gpt4o_{os.path.basename(image_path).replace('.png', '.csv')}"
+            csv_path = os.path.join(args.output_dir, f"results_gpt4o_{os.path.basename(image_path).replace('.png', '.csv')}")
             df.to_csv(csv_path, index=False, encoding='utf-8-sig')
             print(f"\n💾 详细结果已保存到: {csv_path}")
             
@@ -192,8 +339,17 @@ def main():
         print("\n" + "="*60)
 
 if __name__ == "__main__":
-    main()
-    print("\n🎉 演示完成！")
-    print("查看生成的文件:")
-    print("  - output_gpt4o_*.png: 标注图像")
-    print("  - results_gpt4o_*.csv: 详细结果数据") 
+    args = parse_arguments()
+    try:
+        main(args)
+        print("\n🎉 演示完成！")
+        print("查看生成的文件:")
+        print(f"  - {args.output_dir}/output_gpt4o_*.png: 标注图像")
+        print(f"  - {args.output_dir}/results_gpt4o_*.csv: 详细结果数据")
+    except KeyboardInterrupt:
+        print("\n\n⚠️  用户中断了处理过程")
+    except Exception as e:
+        print(f"\n❌ 程序执行出错: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc() 

@@ -3,6 +3,35 @@
 """
 独立图像分析器客户端
 使用 HTTP API 调用图像分析服务
+
+功能特性:
+- 支持文件路径和Base64图像分析
+- 自动发现项目中的测试图像
+- 下载标注图像
+- 显示详细的分析结果统计
+- 支持多种图像格式 (PNG, JPG, JPEG)
+
+使用方法:
+1. 启动服务器:
+   python examples/http/standalone_image_analyzer.py
+
+2. 运行客户端:
+   python examples/http/standalone_client.py
+
+3. 从项目根目录运行:
+   python examples/http/standalone_client.py
+
+API端点:
+- GET  /health - 健康检查
+- POST /analyze_file - 分析图像文件
+- POST /analyze_base64 - 分析Base64图像
+- GET  /annotated_image/<filename> - 获取标注图像
+- GET  /results - 列出分析结果
+
+依赖要求:
+- requests
+- Pillow (PIL)
+- 运行中的图像分析服务器
 """
 
 import os
@@ -149,8 +178,24 @@ def main():
     print("🎯 独立图像分析器客户端")
     print("=" * 50)
     
-    # 测试图像路径
-    test_image = "screenshots/screenshot_20250625_074204.png"
+    # 测试图像路径 - 相对于项目根目录（按优先级排序）
+    test_images = [
+        os.path.join(project_root, "screenshots/screenshot_20250625_074204.png"),
+        os.path.join(project_root, "imgs/word.png"),
+        os.path.join(project_root, "imgs/windows_home.png"),
+        os.path.join(project_root, "imgs/google_page.png"),
+        os.path.join(project_root, "imgs/demo_image.jpg"),
+        os.path.join(project_root, "imgs/excel.png")
+    ]
+    
+    # 找到所有存在的测试图像
+    available_images = []
+    for img_path in test_images:
+        if os.path.exists(img_path):
+            available_images.append(img_path)
+    
+    # 选择第一个可用的图像作为主测试图像
+    test_image = available_images[0] if available_images else None
     
     # 创建客户端
     client = ImageAnalyzerClient()
@@ -174,9 +219,17 @@ def main():
             print(f"❌ 服务器状态异常: {health.get('error', '未知错误')}")
             return
         
-        # 2. 分析测试图像
-        if os.path.exists(test_image):
-            print(f"\n📸 分析测试图像: {test_image}")
+        # 2. 显示可用图像
+        if available_images:
+            print(f"\n📂 找到 {len(available_images)} 个可用的测试图像:")
+            for i, img_path in enumerate(available_images):
+                file_size = os.path.getsize(img_path)
+                size_mb = file_size / (1024 * 1024)
+                print(f"   {i+1}. {os.path.relpath(img_path, project_root)} ({size_mb:.2f} MB)")
+        
+        # 3. 分析测试图像
+        if test_image:
+            print(f"\n📸 使用主测试图像: {os.path.relpath(test_image, project_root)}")
             
             analysis_result = client.analyze_image_file(
                 test_image,
@@ -196,10 +249,16 @@ def main():
                 success = client.get_annotated_image(annotated_filename, download_path)
                 if success:
                     print(f"✅ 标注图像已下载到: {download_path}")
+                    file_size = os.path.getsize(download_path)
+                    print(f"   📊 文件大小: {file_size:,} bytes ({file_size/(1024*1024):.2f} MB)")
                 else:
                     print("❌ 下载标注图像失败")
         else:
-            print(f"⚠️ 测试图像不存在: {test_image}")
+            print("⚠️ 未找到任何测试图像!")
+            print("   尝试查找的路径:")
+            for img_path in test_images:
+                status = "✅ 存在" if os.path.exists(img_path) else "❌ 不存在"
+                print(f"     • {os.path.relpath(img_path, project_root)} - {status}")
             
             # 演示 Base64 分析
             print("\n💡 演示 Base64 图像分析...")
@@ -240,7 +299,12 @@ def main():
             print(f"❌ 获取结果列表失败: {results.get('error')}")
         
         print("\n🎉 演示完成!")
-        print("💡 提示: 可以通过浏览器访问 http://localhost:5000/health 查看服务状态")
+        print("\n💡 使用提示:")
+        print("   • 通过浏览器访问 http://localhost:8080/health 查看服务状态")
+        print("   • 使用不同参数分析图像:")
+        print("     client.analyze_image_file(image_path, box_threshold=0.1)")
+        print("   • 支持的图像格式: PNG, JPG, JPEG")
+        print("   • 服务器需要先启动: python examples/http/standalone_image_analyzer.py")
         
     except Exception as e:
         print(f"❌ 演示过程中出现异常: {e}")

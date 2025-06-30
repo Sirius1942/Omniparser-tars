@@ -40,7 +40,7 @@ def initialize_analyzer():
         
         # 检查模型和配置文件
         model_path = 'weights/icon_detect/model.pt'
-        config_path = "config.json"
+        config_path = os.path.join(project_root, "config.json")
         
         if not os.path.exists(model_path):
             print(f"❌ 模型文件不存在: {model_path}")

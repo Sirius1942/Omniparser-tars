@@ -35,7 +35,7 @@ def send_llm_message(message: str, max_tokens: int = 100, temperature: float = 0
         from openai import OpenAI
         
         # 直接从配置文件读取
-        with open("config.json", 'r', encoding='utf-8') as f:
+        with open(os.path.join(project_root, "config.json"), 'r', encoding='utf-8') as f:
             config = json.load(f)
         
         openai_config = config.get("openai", {})
